@@ -6,7 +6,8 @@ app=Flask(__name__)
 
 app.register_blueprint(user_auth_bp) #connecting the blueprint to flask application. register_blueprint() attaches the blueprint(route organized into module) to our flask app.
 
-
+if __name__ == "__main__":
+    app.run(debug=True)
 
 # /auth
 # +
