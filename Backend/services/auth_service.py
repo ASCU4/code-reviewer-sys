@@ -1,6 +1,9 @@
 from database.database import SessionLocal #gives database session
 from models import User #gives User model
-from werkzeug.security import generate_password_hash #gives password hashing
+from werkzeug.security import generate_password_hash, check_password_hash #gives password hashing
+from flask import current_app
+
+import jwt
 
 
 class AuthService:
@@ -22,6 +25,7 @@ class AuthService:
                 return{
                     "error": "Email already registered"
                 }
+            
             hashed_password=generate_password_hash(password) #hashing password
             user= User(username=username, email=email, password_hash=hashed_password)
             session.add(user) #adding new user to the database
@@ -38,8 +42,46 @@ class AuthService:
         
         finally:
                 session.close()
+    
 
-        
+    @staticmethod
+    def login(data):
+        session=SessionLocal()
+        try:
+            email= data.get("email")
+            password= data.get("password") #password and email extraction
+            
+            if not email or not password:
+                return{
+                    "message":"Credentials Required"
+                }
+
+            user= session.query(User).filter(User.email== email).first()
+            
+            if user is None:
+                return{
+                    "error":"Invalid Credentials!"
+                }
+            #now we verify password
+            if check_password_hash(user.password_hash, password) == False:
+                return{
+                    "error":"Invalid Credentials!"
+                }
+
+            #now payload creation
+            payload= {
+                "user_id": user.id, 
+                "email": user.email
+            }
+            token= jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")
+            return{
+                "token": token
+            }
+        finally:
+            session.close()
+
+
+
 # validation:
         # existing_user= session.query(User).filter(
         #     User.email == email).first() 
@@ -51,3 +93,13 @@ class AuthService:
 # password hashing
 # create user
 # commit
+
+# POST Request
+#     ↓
+# Route
+#     ↓
+# AuthService
+#     ↓
+# SQLAlchemy
+#     ↓
+# SQLite

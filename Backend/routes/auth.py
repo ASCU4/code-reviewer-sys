@@ -12,6 +12,21 @@ def register():
     result= AuthService.register(data)
     return jsonify(result)
 
+@user_auth_bp.route("/login", methods=["POST"])
+def login():
+    data=request.get_json()
+    result=AuthService.login(data)
+    return jsonify(result)
+
+# Register User
+#     ↓
+# Store Hashed Password
+#     ↓
+# Login
+#     ↓
+# Verify Password
+#     ↓
+# Generate JWT
 # handles login in short
 # POST /auth/register
 # POST /auth/login
