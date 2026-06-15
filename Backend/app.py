@@ -9,7 +9,4 @@ app.register_blueprint(user_auth_bp) #connecting the blueprint to flask applicat
 if __name__ == "__main__":
     app.run(debug=True)
 
-# /auth
-# +
-# /register
 
