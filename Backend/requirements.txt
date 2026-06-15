@@ -1,0 +1,16 @@
+flask
+sqlalchemy: 
+
+flask-blueprint: Blueprints in Flask help you organize your application into modular, reusable components. They let you group related routes, templates, and static files together, which is especially useful for large projects. With blueprints, you can develop, test, and maintain different parts of your app separately, and then register them with your main application. Organizing routes into modules. else without module every route will go into app.py.
+Flask App
+│
+├── Auth Blueprint
+├── Dashboard Blueprint
+├── Reports Blueprint
+└── Submission Blueprint
+
+
+pyJWT: JWT (JSON Web Token) is a compact, secure, and self-contained token used for securely transmitting information between parties. It is often used for authentication and authorization in web applications.
+    -Header - Contains metadata (e.g., algorithm used for signing).
+    -Payload - Stores user information (claims like user ID, roles).
+    -Signature - Ensures token integrity using a secret key. 
