@@ -37,3 +37,11 @@ class Review(Base):
     created_at: Mapped[datetime] = mapped_column(
     default=lambda: datetime.now(timezone.utc)
 )
+
+# User
+#   ↓
+# Uploads Code
+#   ↓
+# Review Record Created
+#   ↓
+# Stored in Database
