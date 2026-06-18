@@ -12,7 +12,7 @@ class User(Base):
         nullable=False
     ) #name stores a string, similarly username stores a string and is managed by SQLAlchemy ORM
 
-    id: Mapped[int]= mapped_column(
+    user_id: Mapped[int]= mapped_column(
         primary_key=True,
         unique=True,
         nullable=False
@@ -29,5 +29,3 @@ class User(Base):
         nullable=False
     )
 
-
-Base.metadata.create_all(bind=engine) #create all tables in the engine
