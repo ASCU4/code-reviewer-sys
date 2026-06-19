@@ -1,11 +1,18 @@
 import SectionHeader from "../components/common/SectionHeader";
 import TestimonialCard from "../components/ui/TestimonialCard";
-
 import { testimonialData } from "../utils/testimonialData";
 
+import { useRef } from "react";
+import useRevealAnimation from "../hooks/useRevealAnimation";
+
 function Testimonials() {
+  const sectionRef = useRef(null);
+
+  useRevealAnimation(sectionRef);
+
   return (
     <section
+      ref={sectionRef}
       id="testimonials"
       className="py-24 px-6"
     >

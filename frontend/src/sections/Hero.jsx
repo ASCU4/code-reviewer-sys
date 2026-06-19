@@ -42,9 +42,9 @@ useEffect(() => {
   return (
     <section
       id="hero"
-      className="min-h-screen flex items-center px-6"
+      className="min-h-screen flex items-center py-24 px-6"
     >
-      <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+      <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
         {/* Left Side */}
          <div ref={leftRef}>

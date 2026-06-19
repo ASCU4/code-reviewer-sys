@@ -1,11 +1,18 @@
 import SectionHeader from "../components/common/SectionHeader";
 import WorkflowStep from "../components/ui/WorkflowStep";
-
 import { workflowData } from "../utils/workflowData";
 
+import { useRef } from "react";
+import useRevealAnimation from "../hooks/useRevealAnimation";
+
 function Workflow() {
+  const sectionRef = useRef(null);
+
+  useRevealAnimation(sectionRef);
+
   return (
     <section
+      ref={sectionRef}
       id="workflow"
       className="py-24 px-6"
     >

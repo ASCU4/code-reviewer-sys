@@ -1,11 +1,18 @@
 import SectionHeader from "../components/common/SectionHeader";
 import FeatureCard from "../components/ui/FeatureCard";
-
 import { featuresData } from "../utils/featuresData";
 
+import { useRef } from "react";
+import useRevealAnimation from "../hooks/useRevealAnimation";
+
 function Features() {
+  const sectionRef = useRef(null);
+
+  useRevealAnimation(sectionRef);
+
   return (
     <section
+      ref={sectionRef}
       id="features"
       className="py-24 px-6"
     >

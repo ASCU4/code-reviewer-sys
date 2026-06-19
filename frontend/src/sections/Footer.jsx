@@ -17,27 +17,23 @@ function Footer() {
           </div>
 
           <div className="flex gap-8 text-slate-400">
-            <a href="#engine" className="hover:text-teal-400 transition">
-              Engine
+            <a href="#" className="hover:text-teal-400 transition">
+              Dashboard
             </a>
 
-            <a href="#features" className="hover:text-teal-400 transition">
-              Features
+            <a href="#" className="hover:text-teal-400 transition">
+              Upload
             </a>
 
-            <a href="#workflow" className="hover:text-teal-400 transition">
-              Workflow
-            </a>
-
-            <a href="#analytics" className="hover:text-teal-400 transition">
-              Analytics
+            <a href="#" className="hover:text-teal-400 transition">
+              Reports
             </a>
           </div>
 
         </div>
 
         <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-500">
-          © 2026 CodeLens AI. All rights reserved.
+          © 2025 CodeLens AI. All rights reserved.
         </div>
 
       </div>

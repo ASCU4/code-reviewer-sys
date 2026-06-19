@@ -1,8 +1,16 @@
 import RepoInput from "../components/ui/RepoInput";
 
+import { useRef } from "react";
+import useRevealAnimation from "../hooks/useRevealAnimation";
+
 function CTA() {
+  const sectionRef = useRef(null);
+
+  useRevealAnimation(sectionRef);
+
   return (
     <section
+      ref={sectionRef}
       id="cta"
       className="py-32 px-6"
     >

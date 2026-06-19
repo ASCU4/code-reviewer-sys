@@ -1,11 +1,18 @@
 import SectionHeader from "../components/common/SectionHeader";
 import StatisticCard from "../components/ui/StatisticCard";
-
 import { analyticsData } from "../utils/analyticsData";
 
+import { useRef } from "react";
+import useRevealAnimation from "../hooks/useRevealAnimation";
+
 function Analytics() {
+  const sectionRef = useRef(null);
+
+  useRevealAnimation(sectionRef);
+
   return (
     <section
+      ref={sectionRef}
       id="analytics"
       className="py-24 px-6"
     >
