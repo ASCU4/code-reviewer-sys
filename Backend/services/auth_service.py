@@ -70,7 +70,7 @@ class AuthService:
 
             #now payload creation
             payload= {
-                "user_id": user.id, 
+                "user_id": user.user_id, 
                 "email": user.email
             }
             token= jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")

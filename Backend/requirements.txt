@@ -14,3 +14,46 @@ pyJWT: JWT (JSON Web Token) is a compact, secure, and self-contained token used 
     -Header - Contains metadata (e.g., algorithm used for signing).
     -Payload - Stores user information (claims like user ID, roles).
     -Signature - Ensures token integrity using a secret key. 
+
+
+for verifying that our models work: run this on python shell
+        from database.database import SessionLocal
+        from models.review import Review
+
+        session = SessionLocal()
+
+        review = Review(
+            user_id=1,
+            filename="app.py",
+            language="python",
+            code="print('Hello World')",
+            status="PENDING"
+        )
+
+        session.add(review) will add to the metadata to database
+        session.commit() will INSERT INTO database
+
+    this is equivalent to: 
+                INSERT INTO reviews
+                (user_id, filename, language, code, status)
+                VALUES
+                (1, 'app.py', 'python', 'print("Hello")', 'PENDING');
+
+SessionLocal creates a database session, which is used to track databse operations
+
+
+verifying existence of our record:
+
+from database.database import SessionLocal
+from models.review import Review
+
+session = SessionLocal()
+
+for review in session.query(Review).all():
+    print(
+        review.id,
+        review.user_id,
+        review.filename,
+        review.language,
+        review.status
+    )
