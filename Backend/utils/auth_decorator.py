@@ -14,15 +14,15 @@ def login_required(func):
         auth_header= request.headers.get("Authorization")
         
         if not auth_header:
-            return jsonify({"error":"Authorization token missing"}), 401 
+            return jsonify({"error":"Authorization token missing"}), 401
         
         parts =auth_header.split()#extract token and split it, safer method in case somebody sends garbage like abc123, where index 1 doesn't exist
         if len(parts)!=2 or parts[0]!="Bearer":
             return jsonify({"error": "Invalid Authorization header"}), 401
         
         token= parts[1]
-        payload=decode_token(token) #using utility to decode the token 
-        g.user= payload  #g.user allows every protected route to access itself, therefore no need to decode JWT again
+        payload=decode_token(token) #using utility to decode the token
+        g.user= payload  #g.user allows every protected route to access itself, therefore no need to decode JWT again. Temporary storage for current request
 
         if payload is None: #if our token is Invlid then returns error
             return jsonify({"error":"Invalid Token"}), 401
