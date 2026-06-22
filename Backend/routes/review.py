@@ -25,9 +25,15 @@ def upload_review():
 
 #GET reviews endpoint/API
 
-@review_bp.route("", methods=["GET"])
+@review_bp.route("", methods=["GET"]) # "" because the blueprint already has /reviews
 @login_required
 def get_reviews():
     user_id=g.user["user_id"]
     result= ReviewService.get_review(user_id)
+    return jsonify(result)
+
+@review_bp.route("/analyze/<int:review_id>", methods=["POST"])
+@login_required
+def analyze_file(review_id):
+    result=ReviewService.analyze_file(review_id)
     return jsonify(result)

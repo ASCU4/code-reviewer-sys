@@ -1,5 +1,6 @@
 from database.database import SessionLocal
 from models.review import Review
+from services.analysis_service import AnalysisService
 
 class ReviewService:
     
@@ -53,7 +54,6 @@ class ReviewService:
                     "id": review.id,
                     "filename":  review.filename,
                     "language": review.language,
-                    "code": review.code,
                     "status": review.status,
                 })
             return result
@@ -65,3 +65,17 @@ class ReviewService:
         
         finally:
             session.close()
+
+    @staticmethod
+    def analyze_file(review_id):
+        session= SessionLocal()
+        review=session.query(Review).filter(Review.id==review_id).first()
+        analysis=AnalysisService.analyze_code(review.code)
+        review.status="COMPLETED"
+        review.score=analysis["score"]
+        review.review_result="\n".join(analysis["issues"])
+        session.commit()
+        return{
+            "score": review.score,
+            "issues": analysis["issues"]
+        }
