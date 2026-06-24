@@ -1,6 +1,7 @@
 from database.database import SessionLocal
 from models.review import Review
 from services.analysis_service import AnalysisService
+import json
 
 class ReviewService:
     
@@ -71,9 +72,10 @@ class ReviewService:
         session= SessionLocal()
         review=session.query(Review).filter(Review.id==review_id).first()
         analysis=AnalysisService.analyze_code(review.code)
-        review.status="COMPLETED"
-        review.score=analysis["score"]
-        review.review_result="\n".join(analysis["issues"])
+        review.score = analysis["score"]
+        review.review_result = json.dumps(analysis)
+        review.status = "COMPLETED"
+
         session.commit()
         return{
             "score": review.score,

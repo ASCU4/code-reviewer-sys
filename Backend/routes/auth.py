@@ -3,7 +3,7 @@ from services.auth_service import AuthService
 
 #blueprint instance
 user_auth_bp= Blueprint(
-    "auth", __name__, 
+    "auth", __name__,
     url_prefix="/auth")
 
 @user_auth_bp.route("/register", methods=["POST"])

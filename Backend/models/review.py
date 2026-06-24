@@ -36,7 +36,11 @@ class Review(Base):
     )
     created_at: Mapped[datetime] = mapped_column(
     default=lambda: datetime.now(timezone.utc)
-)
+    )
+    review_result: Mapped[str]= mapped_column(
+        Text, nullable=True
+    )
+    score: Mapped[int]= mapped_column(nullable=True)
 
 # User
 #   ↓
