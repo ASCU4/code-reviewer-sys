@@ -21,6 +21,7 @@ import {
   Loader2, Code2, Users,  Cpu
 } from 'lucide-react';
 import { useMagnetic } from '../hooks/useGSAP';
+import toast from "react-hot-toast";
 
 // ── ANIMATED BRAND PANEL ──────────────────────────────
 function BrandPanel() {
@@ -233,10 +234,27 @@ function AuthInput({ label, id, type='text', value, onChange, error, placeholder
       </div>
       {hint && !error && <p className="mt-1 text-xs" style={{ color:'#334155' }}>{hint}</p>}
       {error && (
-        <p className="flex items-center gap-1 mt-1.5 text-xs" style={{ color:'#F87171' }}>
-          <AlertCircle size={11} /> {error}
-        </p>
-      )}
+  <div
+    className="mt-2 flex items-start gap-2 rounded-lg px-3 py-2 animate-in fade-in duration-200"
+    style={{
+      background: "rgba(239,68,68,0.08)",
+      border: "1px solid rgba(239,68,68,0.18)",
+    }}
+  >
+    <AlertCircle
+      size={14}
+      className="mt-0.5 flex-shrink-0"
+      style={{ color: "#F87171" }}
+    />
+
+    <span
+      className="text-xs leading-relaxed"
+      style={{ color: "#FCA5A5" }}
+    >
+      {error}
+    </span>
+  </div>
+)}
     </div>
   );
 }
@@ -312,29 +330,34 @@ export default function UserSignup() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          password: data.password,
+      body: JSON.stringify({
+        username: `${data.firstName} ${data.lastName}`,
+        email: data.email,
+        password: data.password,
+
         }),
       }
     );
 
-    const result = await response.json();
+const result = await response.json();
 
-    console.log(result);
+setLoading(false);
 
-    setLoading(false);
+if (result.error) {
+  toast.error(result.error);
+  return;
+}
 
-    alert("User registered successfully!");
+toast.success(result.message || "Account created successfully!");
 
-    navigate("/login");
+setTimeout(() => {
+  navigate("/login");
+}, 1200);
 
   } catch (error) {
     console.error(error);
     setLoading(false);
-    alert("Registration failed");
+    toast.error("Registration failed");
   }
 };
 

@@ -1,5 +1,9 @@
 from flask import Flask
 from flask_cors import CORS
+
+from database.database import engine, Base
+from models.user import User
+
 from routes.auth import user_auth_bp
 from routes.dashboard import dashboard_bp
 from routes.review import review_bp
@@ -17,7 +21,8 @@ app.register_blueprint(dashboard_bp) #connecting dashboard to flask application
 
 app.register_blueprint(review_bp)
 
-
+# Create all database tables
+Base.metadata.create_all(bind=engine)
 
 @app.route("/")
 def home():
