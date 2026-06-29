@@ -1,22 +1,29 @@
 function Button({
   children,
   variant = "primary",
+  size = "md",
+  icon: Icon,
+  onClick,
 }) {
   const baseClasses =
-    "px-6 py-3 rounded-xl font-semibold transition-all duration-300";
+    "rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2";
 
   const variants = {
-    primary:
-      "bg-teal-500 text-black hover:scale-105",
+    primary: "bg-teal-500 text-black hover:scale-105",
+    secondary: "border border-slate-700 text-white hover:bg-slate-800",
+  };
 
-    secondary:
-      "border border-slate-700 text-white hover:bg-slate-800",
+  const sizes = {
+    sm: "px-4 py-2 text-sm",
+    md: "px-6 py-3 text-base",
   };
 
   return (
     <button
-      className={`${baseClasses} ${variants[variant]}`}
+      onClick={onClick}
+      className={`${baseClasses} ${variants[variant]} ${sizes[size]}`}
     >
+      {Icon && <Icon size={16} />}
       {children}
     </button>
   );

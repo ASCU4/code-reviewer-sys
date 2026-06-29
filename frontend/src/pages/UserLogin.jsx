@@ -352,9 +352,37 @@ export default function UserLogin() {
     setLoading(true);
 
     // Simulate API call — replace with real auth
-    await new Promise(r => setTimeout(r, 1500));
-    setLoading(false);
-    navigate('/dashboard');
+try {
+  const response = await fetch("http://localhost:5000/auth/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      password,
+    }),
+  });
+
+  const result = await response.json();
+
+  setLoading(false);
+
+  if (result.token) {
+    localStorage.setItem("token", result.token);
+    navigate("/dashboard");
+  } else {
+    setErrors({
+      password: result.error || "Invalid Credentials!",
+    });
+  }
+} catch {
+  setLoading(false);
+
+  setErrors({
+    password: "Unable to connect to the server.",
+  });
+}
   };
 
   // Allow Enter key to submit
