@@ -1,5 +1,6 @@
-from flask import Blueprint
+from flask import Blueprint, request, jsonify, g
 from utils.auth_decorator import login_required
+from services.dashboard_service import DashboardSerivce
 
 dashboard_bp= Blueprint(
     "dashboard",
@@ -10,6 +11,6 @@ dashboard_bp= Blueprint(
 @dashboard_bp.route("/", methods=['GET'])
 @login_required
 def dashboard():
-    return{
-        "message":"Dashboard Accessed"
-    }
+    user_id=g.user["user_id"]
+    result= DashboardSerivce.get_dashboard(user_id)
+    return jsonify(result), 200
