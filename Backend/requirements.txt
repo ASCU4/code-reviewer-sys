@@ -73,3 +73,23 @@ for review in session.query(Review).all():
         review.language,
         review.status
     )
+
+
+Work done:
+Authentication
+├── Register
+├── Login
+├── JWT Generation
+└── JWT Protection
+
+Reviews
+├── Upload Review
+├── Get All Reviews
+├── Database Storage
+└── User → Review Relationship
+
+Analysis
+├── Analysis Endpoint
+├── Rule Engine
+├── Score Generation
+└── JSON Result Storage

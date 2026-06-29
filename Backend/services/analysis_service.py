@@ -111,6 +111,10 @@ class AnalysisService:
             issues.append(issue)
             score -= 10
 
+        # total_issues = sum(
+        #     len(lines["issues"])
+        # )
+
         return {
             "score": max(score, 0),
             "issues": issues,
