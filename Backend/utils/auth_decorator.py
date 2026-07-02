@@ -3,6 +3,8 @@ from functools import wraps
 from flask import request, jsonify
 from utils.jwt_handler import decode_token
 from flask import g
+from database.database import SessionLocal
+from models.user import User
 
 # wraps preserves information about the original function.
 
@@ -22,10 +24,20 @@ def login_required(func):
         
         token= parts[1]
         payload=decode_token(token) #using utility to decode the token
-        g.user= payload  #g.user allows every protected route to access itself, therefore no need to decode JWT again. Temporary storage for current request
 
         if payload is None: #if our token is Invlid then returns error
             return jsonify({"error":"Invalid Token"}), 401
+
+        user_id = payload.get("user_id")
+        session = SessionLocal()
+        try:
+            user = session.query(User).filter(User.user_id == user_id).first()
+            if user is None:
+                return jsonify({"error":"Invalid Token"}), 401
+        finally:
+            session.close()
+
+        g.user= payload  #g.user allows every protected route to access itself, therefore no need to decode JWT again. Temporary storage for current request
         return func(*args, **kwargs) #JWT verified, now execute actual route
 
     return wrapper

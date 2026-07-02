@@ -37,3 +37,17 @@ def get_reviews():
 def analyze_file(review_id):
     result=ReviewService.analyze_file(review_id)
     return jsonify(result)
+
+@review_bp.route("/github", methods=["POST"])
+@login_required
+def upload_repository():
+    data= request.get_json()
+    repo_url=data.get("repo_url")
+    result = ReviewService.upload_repository(
+        repo_url,
+        g.user["user_id"]
+    )
+    if "error" in result:
+        return jsonify(result), 400
+
+    return jsonify(result), 200
