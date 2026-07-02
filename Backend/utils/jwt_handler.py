@@ -1,4 +1,4 @@
-import jwt 
+import jwt
 from flask import current_app #current_app is a Flask-provided proxy object.
 
 #decoding a token, take token->verify signature->extract payload->return data
@@ -8,7 +8,7 @@ from flask import current_app #current_app is a Flask-provided proxy object.
 def decode_token(token):
     try:
         payload=jwt.decode(
-            token, 
+            token,
             current_app.config["SECRET_KEY"],
             algorithms=["HS256"]
         )
@@ -16,3 +16,15 @@ def decode_token(token):
     
     except jwt.InvalidTokenError:
         return None
+    
+def create_token(user):
+    payload={
+        "user_id": user.user_id,
+        "email": user.email
+        }
+    token=jwt.encode(
+        payload,
+        current_app.config["SECRET_KEY"],
+        algorithm="HS256"
+    )
+    return token
