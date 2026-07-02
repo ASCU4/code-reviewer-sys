@@ -25,7 +25,16 @@ class User(Base):
     )
 
     password_hash: Mapped[str]= mapped_column(
-        String(255), 
-        nullable=False
+        String(255),
+        nullable=True #default was False
     )
+
+    provider: Mapped[str]= mapped_column(
+        String(20), default="local"
+    )
+    
+    provider_id: Mapped[str]= mapped_column(
+        String(100), nullable= True
+    )
+
 
