@@ -1,5 +1,10 @@
 Flask
+Flask-Cors
+Flask-Limiter
 SQLAlchemy
 python-dotenv
 PyJWT
 Werkzeug
+GitPython
+google-auth
+requests
