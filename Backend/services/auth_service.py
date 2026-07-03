@@ -2,6 +2,8 @@ from database.database import SessionLocal #gives database session
 from models import User #gives User model
 from werkzeug.security import generate_password_hash, check_password_hash #gives password hashing
 from flask import current_app
+from services.oauth_service import OAuthService
+from utils.jwt_handler import create_token
 
 import jwt
 
@@ -67,6 +69,10 @@ class AuthService:
                 return{
                     "error":"Invalid Credentials!"
                 }
+            if user.password_hash is None:
+                return {
+                    "error": "This account uses Google Sign-In."
+                }
 
             #now payload creation
             payload= {
@@ -79,6 +85,50 @@ class AuthService:
             }
         finally:
             session.close()
+
+
+#new changes for google login
+    @staticmethod
+    def google_login(token):
+        session=SessionLocal()
+        try:
+            google_user=OAuthService.verify_google_token(token)
+            if not google_user:
+                return{
+                    "error":"Invalid Google Token"
+                }
+            user=session.query(User).filter(User.email==google_user["email"]).first()
+            if user is None:
+                user = User(
+                username=google_user["username"],
+                email=google_user["email"],
+                password_hash=None,
+                provider="google",
+                provider_id=google_user["provider_id"]
+                )
+                session.add(user)
+            #if an existing user wants to connect with their Google Account
+            else:
+                if user.provider_id is None:
+                    user.provider = "google"
+                    user.provider_id = google_user["provider_id"]
+            session.commit()
+            jwt= create_token({
+                "user_id": user.user_id,
+                "email": user.email
+            })
+            return {
+            "message": "Google Login Successful",
+            "token": jwt,
+            "user": {
+                "user_id": user.user_id,
+                "username": user.username,
+                "email": user.email
+            }
+            }
+        finally:
+            session.close()
+
 
 
 

@@ -5,6 +5,7 @@ from git import Repo
 from database.database import SessionLocal
 from models.review import Review
 from services.analysis_service import AnalysisService
+from flask import g
 import json
 
 class ReviewService:
@@ -135,7 +136,7 @@ class ReviewService:
     @staticmethod
     def analyze_file(review_id):
         session= SessionLocal()
-        review=session.query(Review).filter(Review.id==review_id).first()
+        review=session.query(Review).filter(Review.id==review_id, Review.user_id == g.user["user_id"]).first() #to avoid anyone analyzing someone else's files or check their records
         analysis = AnalysisService.analyze_code(review.code)
         review.score = analysis["score"]
         review.review_result = json.dumps(analysis)

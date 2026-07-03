@@ -3,4 +3,9 @@ venv/
 __pycache__/
 *.pyc
 *.db
+.config
+.oauth_config
+.requirements
+.test_db
+.create_tables
 node_modules/
