@@ -1,5 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from database.database import engine, Base
 from models.user import User
@@ -11,7 +13,13 @@ from services.auth_service import AuthService
 
 app=Flask(__name__)
 
+limiter=Limiter(key_func=get_remote_address, default_limits=['200 per day', '50 per hour'])
+
+limiter.init_app(app)
+
 CORS(app, origins=["http://localhost:5173"]) #Cross origin resource sharing, enable backend to connect with frontend like in our React
+
+limiter = Limiter(app, key_func=get_remote_address)
 
 app.config.from_object("config.Config")
 
