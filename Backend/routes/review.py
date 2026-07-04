@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, g
-from app import limiter
+from extensions import limiter
 
 from utils.auth_decorator import login_required
 from services.review_service import ReviewService

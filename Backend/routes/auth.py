@@ -1,20 +1,19 @@
 from flask import Blueprint, request, jsonify
 from services.auth_service import AuthService
-from app import limiter
+from extensions import limiter
 #blueprint instance
 user_auth_bp= Blueprint(
     "auth", __name__,
     url_prefix="/auth")
 
 @user_auth_bp.route("/register", methods=["POST"])
-@limiter.limit("3 per minute")
 def register():
     data= request.get_json()
     result= AuthService.register(data)
     return jsonify(result)
 
 @user_auth_bp.route("/login", methods=["POST"])
-@limiter.limit("5 per minute")
+
 def login():
     data=request.get_json()
     result=AuthService.login(data)
@@ -22,7 +21,7 @@ def login():
 
 #google login
 @user_auth_bp.route("/google", methods=["POST"])
-@limiter.limit("5 per minute")
+
 def google_login():
     data= request.get_json()
     id_token= data.get("id_token")
