@@ -93,3 +93,5 @@ Analysis
 ├── Rule Engine
 ├── Score Generation
 └── JSON Result Storage
+
+jwt expiration: JWT expiration is one of the simplest but most important security improvements you can make. Without it, a stolen token can be used indefinitely.

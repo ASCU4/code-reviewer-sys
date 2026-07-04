@@ -65,6 +65,11 @@ class AuthService:
                     "error":"Invalid Credentials!"
                 }
             #now we verify password
+            if user.password_hash is None: #to prevent password logins for Google Accounts
+                return {
+                "error": "This account uses Google Sign-In."
+                }
+            
             if check_password_hash(user.password_hash, password) == False:
                 return{
                     "error":"Invalid Credentials!"

@@ -9,3 +9,4 @@ __pycache__/
 .test_db
 .create_tables
 node_modules/
+.agents
