@@ -5,10 +5,36 @@ from git import Repo
 from database.database import SessionLocal
 from models.review import Review
 from services.analysis_service import AnalysisService
-from flask import g
 import json
 
 class ReviewService:
+    SKIPPED_DIRECTORIES = {
+        ".git",
+        ".venv",
+        "__pycache__",
+        "build",
+        "dist",
+        "node_modules",
+        "venv",
+    }
+
+    SUPPORTED_EXTENSIONS = {
+        ".py": "python",
+        ".js": "javascript",
+        ".jsx": "javascript",
+        ".ts": "typescript",
+        ".tsx": "typescript",
+        ".java": "java",
+        ".cpp": "cpp",
+        ".c": "c",
+        ".cs": "csharp",
+        ".go": "go",
+        ".rb": "ruby",
+        ".php": "php",
+    }
+
+    MAX_FILE_SIZE_BYTES = 500 * 1024
+
     @staticmethod
     def _parse_review_result(review_result):
         if not review_result:
@@ -38,8 +64,12 @@ class ReviewService:
                 "name": review.filename,
                 "url": review.code or None,
             }
-            result["files_scanned"] = analysis.get("files_scanned") if isinstance(analysis, dict) else None
-            result["issues_count"] = len(analysis.get("issues", [])) if isinstance(analysis, dict) else 0
+            result["files_scanned"] = analysis.get("files_scanned") if isinstance(analysis, dict) else 0
+            result["issues_count"] = (
+                analysis.get("total_issues", len(analysis.get("issues", [])))
+                if isinstance(analysis, dict) else 0
+            )
+            result["summary"] = analysis.get("summary") if isinstance(analysis, dict) else None
             result["analysis"] = analysis
 
         return result
@@ -105,47 +135,113 @@ class ReviewService:
             session.close()
 
     @staticmethod
-    def analyze_files(files):
-        total_score=0
-        total_files=len(files)
-        all_issues=[]
-        files_results=[]
+    def analyze_files(files, repository=None, scan_summary=None):
+        total_score = 0
+        total_files = len(files)
+        all_issues = []
+        files_results = []
+        severity_counts = {
+            "high": 0,
+            "medium": 0,
+            "low": 0,
+        }
+
         for file in files:
-            analysis=AnalysisService.analyze_code(file["code"])
-            total_score+=analysis["score"]
+            analysis = AnalysisService.analyze_code(file["code"])
+            total_score += analysis["score"]
+
+            file_issues = []
+            for issue in analysis["issues"]:
+                issue_with_file = {
+                    **issue,
+                    "file": file["filename"],
+                    "language": file["language"],
+                }
+                file_issues.append(issue_with_file)
+                all_issues.append(issue_with_file)
+
+                severity = issue.get("severity")
+                if severity in severity_counts:
+                    severity_counts[severity] += 1
+
             files_results.append(
-                {"filename": file["filename"],
+                {
+                "filename": file["filename"],
                 "language": file["language"],
+                "lines": file["lines"],
+                "size_bytes": file["size_bytes"],
                 "score": analysis["score"],
-                "issues": analysis["issues"]}
+                "issues_count": len(file_issues),
+                "issues": file_issues,
+                }
             )
 
-            for issue in analysis["issues"]:
-                issue["file"]= file["filename"]
-                all_issues.append(issue)
-        average_score=(round(total_score/total_files, 1)
-                    if total_files > 0 else 0)
-        return{
+        average_score = (
+            round(total_score / total_files, 1)
+            if total_files > 0 else 0
+        )
+        files_results.sort(key=lambda item: (item["score"], -item["issues_count"], item["filename"]))
+        all_issues.sort(
+            key=lambda issue: (
+                {"high": 0, "medium": 1, "low": 2}.get(issue.get("severity"), 3),
+                issue.get("file") or "",
+                issue.get("line") or 0,
+            )
+        )
+
+        highest_risk_files = [
+            {
+                "filename": file["filename"],
+                "language": file["language"],
+                "score": file["score"],
+                "issues_count": file["issues_count"],
+                "lines": file["lines"],
+            }
+            for file in files_results[:5]
+        ]
+
+        summary = {
+            "total_issues": len(all_issues),
+            "severity_counts": severity_counts,
+            "clean_files": sum(1 for file in files_results if file["issues_count"] == 0),
+            "flagged_files": sum(1 for file in files_results if file["issues_count"] > 0),
+            "highest_risk_files": highest_risk_files,
+            "top_issues": all_issues[:20],
+        }
+
+        return {
+            "repository": repository,
             "score": average_score,
             "files_scanned": total_files,
+            "total_issues": len(all_issues),
+            "summary": summary,
+            "scan": scan_summary or {},
             "files": files_results,
-            "issues": all_issues
+            "issues": all_issues,
         }
 
     
     @staticmethod
-    def analyze_file(review_id):
+    def analyze_file(review_id, user_id):
         session= SessionLocal()
-        review=session.query(Review).filter(Review.id==review_id, Review.user_id == g.user["user_id"]).first() #to avoid anyone analyzing someone else's files or check their records
-        analysis = AnalysisService.analyze_code(review.code)
-        review.score = analysis["score"]
-        review.review_result = json.dumps(analysis)
-        review.status = "COMPLETED"
-        session.commit()
-        return{
-            "score": review.score,
-            "issues": analysis["issues"]
-        }
+        try:
+            review=session.query(Review).filter(Review.id==review_id, Review.user_id == user_id).first() #to avoid anyone analyzing someone else's files or check their records
+            if review is None:
+                return {
+                    "error": "Review not found"
+                }
+
+            analysis = AnalysisService.analyze_code(review.code)
+            review.score = analysis["score"]
+            review.review_result = json.dumps(analysis)
+            review.status = "COMPLETED"
+            session.commit()
+            return{
+                "score": review.score,
+                "issues": analysis["issues"]
+            }
+        finally:
+            session.close()
 
     @staticmethod
     def upload_repository(repo_url, user_id):
@@ -157,48 +253,71 @@ class ReviewService:
                     "error": "Repository URL is required."
                 }
 
-            # Create temporary folder
             temp_dir = tempfile.mkdtemp()
-            # Clone repository
             Repo.clone_from(repo_url, temp_dir)
-            supported_extensions = {
-                ".py",
-                # ".java",
-                # ".js",
-                # ".ts",
-                # ".cpp",
-                # ".c",
-                # ".cs",
-                # ".go"
+
+            repository_name = os.path.basename(repo_url.rstrip("/"))
+            if repository_name.endswith(".git"):
+                repository_name = repository_name[:-4]
+
+            scan_summary = {
+                "supported_extensions": sorted(ReviewService.SUPPORTED_EXTENSIONS.keys()),
+                "skipped_directories": sorted(ReviewService.SKIPPED_DIRECTORIES),
+                "skipped_files": {
+                    "unsupported_extension": 0,
+                    "too_large": 0,
+                    "read_error": 0,
+                },
             }
             files = []
-            for root, _, filenames in os.walk(temp_dir):
-                # Ignore git folder
-                if ".git" in root:
-                    continue
+            for root, dirnames, filenames in os.walk(temp_dir):
+                dirnames[:] = [
+                    dirname
+                    for dirname in dirnames
+                    if dirname not in ReviewService.SKIPPED_DIRECTORIES
+                ]
+
                 for filename in filenames:
-                    extension = os.path.splitext(filename)[1]
-                    if extension not in supported_extensions:
+                    extension = os.path.splitext(filename)[1].lower()
+                    if extension not in ReviewService.SUPPORTED_EXTENSIONS:
+                        scan_summary["skipped_files"]["unsupported_extension"] += 1
                         continue
+
                     filepath = os.path.join(root, filename)
                     try:
+                        size_bytes = os.path.getsize(filepath)
+                        if size_bytes > ReviewService.MAX_FILE_SIZE_BYTES:
+                            scan_summary["skipped_files"]["too_large"] += 1
+                            continue
+
                         with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
                             code = f.read()
                         files.append({
                             "filename": os.path.relpath(filepath, temp_dir),
-                            "language": extension[1:],
-                            "code": code
+                            "language": ReviewService.SUPPORTED_EXTENSIONS[extension],
+                            "code": code,
+                            "lines": len(code.splitlines()),
+                            "size_bytes": size_bytes,
                         })
                     except Exception:
+                        scan_summary["skipped_files"]["read_error"] += 1
                         continue
+
             if len(files) == 0:
                 return {
                     "error": "No supported source files found."
                 }
-            analysis = ReviewService.analyze_files(files)
-            repository_name = os.path.basename(repo_url.rstrip("/"))
-            if repository_name.endswith(".git"):
-                repository_name = repository_name[:-4]
+
+            repository = {
+                "name": repository_name,
+                "url": repo_url,
+                "source_files_found": len(files),
+            }
+            analysis = ReviewService.analyze_files(
+                files,
+                repository=repository,
+                scan_summary=scan_summary,
+            )
 
             review = Review(
                 user_id=user_id,
@@ -214,8 +333,11 @@ class ReviewService:
             return {
                 "message": "Repository analyzed successfully",
                 "review_id": review.id,
-                "files_scanned": len(files),
-                "score": analysis["score"]
+                "repository": repository,
+                "files_scanned": analysis["files_scanned"],
+                "total_issues": analysis["total_issues"],
+                "summary": analysis["summary"],
+                "score": analysis["score"],
             }
         except Exception as e:
             session.rollback()

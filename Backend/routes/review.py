@@ -38,7 +38,10 @@ def get_reviews():
 @login_required
 @limiter.limit("30 per hour")
 def analyze_file(review_id):
-    result=ReviewService.analyze_file(review_id)
+    result=ReviewService.analyze_file(review_id, g.user["user_id"])
+    if "error" in result:
+        return jsonify(result), 404
+
     return jsonify(result)
 
 @review_bp.route("/github", methods=["POST"])
