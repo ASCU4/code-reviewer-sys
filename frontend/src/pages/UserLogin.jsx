@@ -27,6 +27,8 @@ import {
   AlertCircle, GitBranch, Globe, Loader2
 } from 'lucide-react';
 import { useMagnetic } from '../hooks/useGSAP';
+import { useGoogleLogin } from "@react-oauth/google";
+import toast from "react-hot-toast";
 
 // ── ANIMATED BACKGROUND PANEL ─────────────────────────
 // This is the left side — pure atmosphere, no content clutter.
@@ -368,10 +370,16 @@ try {
 
   setLoading(false);
 
-  if (result.token) {
-    localStorage.setItem("token", result.token);
-    navigate("/dashboard");
-  } else {
+if (result.token) {
+  localStorage.setItem("token", result.token);
+
+  // Save logged-in user
+  if (result.user) {
+    localStorage.setItem("user", JSON.stringify(result.user));
+  }
+
+  navigate("/dashboard");
+} else {
     setErrors({
       password: result.error || "Invalid Credentials!",
     });
@@ -383,6 +391,54 @@ try {
     password: "Unable to connect to the server.",
   });
 }
+  };
+
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        setLoading(true);
+
+        const response = await fetch("http://localhost:5000/auth/google", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            access_token: tokenResponse.access_token,
+          }),
+        });
+
+        const result = await response.json();
+
+        setLoading(false);
+
+        if (result.token) {
+          localStorage.setItem("token", result.token);
+
+          if (result.user) {
+            localStorage.setItem("user", JSON.stringify(result.user));
+          }
+
+          toast.success("Google Login Successful!");
+          navigate("/dashboard");
+        } else {
+          toast.error(result.error || "Google Login Failed");
+        }
+      } catch (error) {
+        console.error(error);
+        setLoading(false);
+        toast.error("Unable to connect to the server.");
+      }
+    },
+
+    onError: () => {
+      toast.error("Google Login Cancelled");
+    },
+  });
+
+  const handleGoogleLogin = () => {
+    googleLogin();
   };
 
   // Allow Enter key to submit
@@ -431,8 +487,17 @@ try {
 
           {/* Social login */}
           <div className="flex gap-3 mb-6">
-            <SocialButton icon={GitBranch} label="GitHub" onClick={() => {}} />
-            <SocialButton icon={Globe} label="Google" onClick={() => {}} />
+            <SocialButton
+              icon={GitBranch}
+              label="GitHub"
+              onClick={() => {}}
+            />
+
+            <SocialButton
+              icon={Globe}
+              label="Google"
+              onClick={handleGoogleLogin}
+            />
           </div>
 
           {/* Divider */}

@@ -30,7 +30,7 @@ def google_login():
     return jsonify(result), 200
 
 #github login
-@user_auth_bp("/github", methods=["POST"])
+@user_auth_bp.route("/github", methods=["POST"])
 def github_login():
     code=request.json.get("code")
     result=AuthService.github_login(code)
