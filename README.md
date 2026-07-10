@@ -249,8 +249,7 @@ Protected APIs
 # Contributors
 
 * **Dhruv Sharma**
-* **Shreyas**
-* **Sakshi**
+* **Shivansh Thakur**
 
 ---
 
