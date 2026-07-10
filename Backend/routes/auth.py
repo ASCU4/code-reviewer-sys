@@ -13,7 +13,6 @@ def register():
     return jsonify(result)
 
 @user_auth_bp.route("/login", methods=["POST"])
-
 def login():
     data=request.get_json()
     result=AuthService.login(data)
@@ -21,7 +20,6 @@ def login():
 
 #google login
 @user_auth_bp.route("/google", methods=["POST"])
-
 def google_login():
     data= request.get_json()
     id_token= data.get("id_token")
@@ -31,6 +29,12 @@ def google_login():
     
     return jsonify(result), 200
 
+#github login
+@user_auth_bp("/github", methods=["POST"])
+def github_login():
+    code=request.json.get("code")
+    result=AuthService.github_login(code)
+    return jsonify(result)
 # Register User
 #     ↓
 # Store Hashed Password

@@ -3,6 +3,7 @@ from models import User #gives User model
 from werkzeug.security import generate_password_hash, check_password_hash #gives password hashing
 from flask import current_app
 from services.oauth_service import OAuthService
+from services.github_oauth_service import GithubOAuthService
 from utils.jwt_handler import create_token
 
 import jwt
@@ -81,7 +82,7 @@ class AuthService:
 
             #now payload creation
             payload= {
-                "user_id": user.user_id, 
+                "user_id": user.user_id,
                 "email": user.email
             }
             token= jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")
@@ -131,6 +132,38 @@ class AuthService:
                 "email": user.email
             }
             }
+        finally:
+            session.close()
+    
+    @staticmethod
+    def github_login(code):
+        session=SessionLocal()
+        try:
+            token_data=GithubOAuthService.exchange_code(code)
+            access_token= token_data["access_token"]
+            github_user=GithubOAuthService.get_user(access_token)
+            email=GithubOAuthService.get_email(access_token)
+            user=session.query(User).filter(User.email==email).first()
+            if user is None:
+                username=github_user["login"]
+                email=email,
+                password_hash=None,
+                provider="github",
+                provider_id=str(github_user["id"])
+                session.add(user)
+                session.commit()
+                session.refresh(user)
+
+            token=create_token(user)
+            return{
+                "token":token,
+                "user":{
+                    "user_id": user.user_id,
+                    "username": user.username,
+                    "email": user.email
+                }
+            }
+        
         finally:
             session.close()
 
