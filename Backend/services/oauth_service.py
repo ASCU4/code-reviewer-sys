@@ -15,7 +15,6 @@ class OAuthService:
             "email": user["email"],
             "username": user.get("name", user["email"].split("@"[0]))
         }
-        
         # try:
         #     user_info= id_token.verify_oauth2_token(
         #         token, google_requests.Request(), OAuthConfig.GOOGLE_CLIENT_ID

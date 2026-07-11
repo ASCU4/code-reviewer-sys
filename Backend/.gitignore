@@ -10,3 +10,4 @@ __pycache__/
 .create_tables
 node_modules/
 .agents
+postman
