@@ -22,8 +22,8 @@ def login():
 @user_auth_bp.route("/google", methods=["POST"])
 def google_login():
     data= request.get_json()
-    id_token= data.get("id_token")
-    result= AuthService.google_login(id_token)
+    access_token= data.get("access_token")
+    result= AuthService.google_login(access_token)
     if "error" in result:
         return jsonify(result), 401
     

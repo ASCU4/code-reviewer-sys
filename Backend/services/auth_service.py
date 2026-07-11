@@ -95,10 +95,10 @@ class AuthService:
 
 #new changes for google login
     @staticmethod
-    def google_login(token):
+    def google_login(access_token):
         session=SessionLocal()
         try:
-            google_user=OAuthService.verify_google_token(token)
+            google_user=OAuthService.verify_google_token(access_token)
             if not google_user:
                 return{
                     "error":"Invalid Google Token"
@@ -119,10 +119,7 @@ class AuthService:
                     user.provider = "google"
                     user.provider_id = google_user["provider_id"]
             session.commit()
-            jwt= create_token({
-                "user_id": user.user_id,
-                "email": user.email
-            })
+            jwt= create_token(user)
             return {
             "message": "Google Login Successful",
             "token": jwt,
