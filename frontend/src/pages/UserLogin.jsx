@@ -441,6 +441,50 @@ if (result.token) {
     googleLogin();
   };
 
+  const handleGithubLogin = () => {
+    const clientId = "Ov23litbT0TUoqDfNJtB";
+    const scope = "read:user user:email";
+
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}`;
+  };
+
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("code");
+
+    if (!code) return;
+
+    const handleGithubCallback = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/auth/github", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ code }),
+        });
+
+        const result = await response.json();
+
+        if (result.token) {
+          localStorage.setItem("token", result.token);
+          localStorage.setItem("user", JSON.stringify(result.user));
+          toast.success("GitHub Login Successful!");
+          window.history.replaceState({}, document.title, window.location.pathname);
+          navigate("/dashboard");
+        } else {
+          toast.error(result.error || "GitHub Login Failed");
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error("Unable to connect to the server.");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    };
+
+    handleGithubCallback();
+  }, [navigate]);
+
   // Allow Enter key to submit
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') handleSubmit();
@@ -490,7 +534,7 @@ if (result.token) {
             <SocialButton
               icon={GitBranch}
               label="GitHub"
-              onClick={() => {}}
+              onClick={handleGithubLogin}
             />
 
             <SocialButton

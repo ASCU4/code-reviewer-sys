@@ -21,6 +21,7 @@ import {
   Loader2, Code2, Users,  Cpu
 } from 'lucide-react';
 import { useMagnetic } from '../hooks/useGSAP';
+import { useGoogleLogin } from "@react-oauth/google";
 import toast from "react-hot-toast";
 
 // ── ANIMATED BRAND PANEL ──────────────────────────────
@@ -361,6 +362,97 @@ setTimeout(() => {
   }
 };
 
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        setLoading(true);
+
+        const response = await fetch("http://localhost:5000/auth/google", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            access_token: tokenResponse.access_token,
+          }),
+        });
+
+        const result = await response.json();
+
+        setLoading(false);
+
+        if (result.token) {
+          localStorage.setItem("token", result.token);
+
+          if (result.user) {
+            localStorage.setItem("user", JSON.stringify(result.user));
+          }
+
+          toast.success("Google Login Successful!");
+          navigate("/dashboard");
+        } else {
+          toast.error(result.error || "Google Login Failed");
+        }
+      } catch (error) {
+        console.error(error);
+        setLoading(false);
+        toast.error("Unable to connect to the server.");
+      }
+    },
+
+    onError: () => {
+      toast.error("Google Login Cancelled");
+    },
+  });
+
+  const handleGoogleLogin = () => {
+    googleLogin();
+  };
+
+  const handleGithubLogin = () => {
+    const clientId = "Ov23litbT0TUoqDfNJtB";
+    const scope = "read:user user:email";
+
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}`;
+  };
+
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("code");
+
+    if (!code) return;
+
+    const handleGithubCallback = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/auth/github", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ code }),
+        });
+
+        const result = await response.json();
+
+        if (result.token) {
+          localStorage.setItem("token", result.token);
+          localStorage.setItem("user", JSON.stringify(result.user));
+          toast.success("GitHub Login Successful!");
+          window.history.replaceState({}, document.title, window.location.pathname);
+          navigate("/dashboard");
+        } else {
+          toast.error(result.error || "GitHub Login Failed");
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error("Unable to connect to the server.");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    };
+
+    handleGithubCallback();
+  }, [navigate]);
+
   return (
     <div className="min-h-screen flex" style={{ background:'#09090B' }}>
 
@@ -399,10 +491,10 @@ setTimeout(() => {
           {/* Social buttons */}
           <div className="flex gap-3 mb-5">
             {[
-              { icon: GitBranch, label:'GitHub' },
-              { icon: Globe, label:'Google' },
+              { icon: GitBranch, label:'GitHub', onClick: handleGithubLogin },
+              { icon: Globe, label:'Google', onClick: handleGoogleLogin },
             ].map(s => (
-              <button key={s.label} type="button"
+              <button key={s.label} type="button" onClick={s.onClick}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
                 style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', color:'#94A3B8' }}
                 onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='#F1F5F9'; e.currentTarget.style.borderColor='rgba(255,255,255,0.2)'; }}
