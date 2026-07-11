@@ -31,6 +31,17 @@ function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const profileRef = useRef(null);
+  const [user] = useState(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+      return parsedUser && typeof parsedUser === "object" ? parsedUser : {};
+    } catch {
+      return {};
+    }
+  });
+  const username = user.username || "Guest";
+  const email = user.email || "guest@example.com";
 
   // Glassmorphism scroll effect
   useEffect(() => {
@@ -134,8 +145,8 @@ function Navbar() {
               }`}
             >
               <div className="p-4 border-b border-white/5 bg-white/[0.02]">
-                <p className="text-sm font-medium text-text-1">John Doe</p>
-                <p className="text-xs text-text-4 mt-0.5 truncate">john@example.com</p>
+                <p className="text-sm font-medium text-text-1">{username}</p>
+                <p className="text-xs text-text-4 mt-0.5 truncate">{email}</p>
               </div>
               <div className="p-2">
                 <button 
@@ -173,8 +184,8 @@ function Navbar() {
             </div>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-text-1 truncate">John Doe</p>
-            <p className="text-xs text-text-4 truncate">john@example.com</p>
+            <p className="text-sm font-medium text-text-1 truncate">{username}</p>
+            <p className="text-xs text-text-4 truncate">{email}</p>
           </div>
           <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-teal/10 border border-teal/20 text-[10px] font-semibold text-teal uppercase tracking-wider">
             Pro Plan
