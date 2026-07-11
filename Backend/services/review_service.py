@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 from git import Repo
+from sqlalchemy import func
 from database.database import SessionLocal
 from models.review import Review
 from services.analysis_service import AnalysisService
@@ -45,12 +46,31 @@ class ReviewService:
             return None
 
     @staticmethod
+    def _next_user_review_number(session, user_id):
+        """
+        Returns the next sequential review number for this user
+        (1 for their first review, 2 for their second, etc).
+
+        NOTE: under concurrent uploads from the same user this has a
+        small race window (two requests could read the same max at once).
+        If that matters for your use case, wrap this + the insert in a
+        transaction with SELECT ... FOR UPDATE, or enforce a unique
+        constraint on (user_id, user_review_number) and retry on conflict.
+        """
+        max_number = (
+            session.query(func.max(Review.user_review_number))
+            .filter(Review.user_id == user_id)
+            .scalar()
+        )
+        return (max_number or 0) + 1
+
+    @staticmethod
     def _serialize_review(review):
         analysis = ReviewService._parse_review_result(review.review_result)
         is_repository = review.language.lower() == "repository"
 
         result = {
-            "id": review.id,
+            "id": review.user_review_number,
             "filename": review.filename,
             "language": review.language,
             "status": review.status,
@@ -88,13 +108,16 @@ class ReviewService:
                 return{
                     "error":"Missing required fields"
                 }
-            
+
+            user_review_number = ReviewService._next_user_review_number(session, user_id)
+
             review=Review(
                 user_id=user_id,
                 filename=filename,
                 language=language,
                 code=code,
-                status= "PENDING"
+                status= "PENDING",
+                user_review_number=user_review_number,
             )
 
             session.add(review)
@@ -102,7 +125,7 @@ class ReviewService:
 
             return{
                 "message":"Review Upload Successfully",
-                "review_id":review.id
+                "review_id":review.user_review_number
             }
 
         except Exception as e:
@@ -225,7 +248,10 @@ class ReviewService:
     def analyze_file(review_id, user_id):
         session= SessionLocal()
         try:
-            review=session.query(Review).filter(Review.id==review_id, Review.user_id == user_id).first() #to avoid anyone analyzing someone else's files or check their records
+            review=session.query(Review).filter(
+                Review.user_review_number == review_id,
+                Review.user_id == user_id,
+            ).first() #to avoid anyone analyzing someone else's files or check their records
             if review is None:
                 return {
                     "error": "Review not found"
@@ -319,6 +345,8 @@ class ReviewService:
                 scan_summary=scan_summary,
             )
 
+            user_review_number = ReviewService._next_user_review_number(session, user_id)
+
             review = Review(
                 user_id=user_id,
                 filename=repository_name,
@@ -326,13 +354,14 @@ class ReviewService:
                 code=repo_url,
                 status="COMPLETED",
                 score=analysis["score"],
-                review_result=json.dumps(analysis)
+                review_result=json.dumps(analysis),
+                user_review_number=user_review_number,
             )
             session.add(review)
             session.commit()
             return {
                 "message": "Repository analyzed successfully",
-                "review_id": review.id,
+                "review_id": review.user_review_number,
                 "repository": repository,
                 "files_scanned": analysis["files_scanned"],
                 "total_issues": analysis["total_issues"],

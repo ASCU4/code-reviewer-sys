@@ -41,7 +41,9 @@ class Review(Base):
         Text, nullable=True
     )
     score: Mapped[int]= mapped_column(nullable=True)
-
+    user_review_number: Mapped[int]= mapped_column(
+        nullable=False, default=0
+    )
 # User
 #   ↓
 # Uploads Code

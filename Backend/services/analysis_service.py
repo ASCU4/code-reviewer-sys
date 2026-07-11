@@ -1,79 +1,94 @@
 import re
 class AnalysisService:
     RULES = [
-        {
-            "id": "debug-print",
-            "pattern": re.compile(r"\bprint\s*\("),
-            "message": "Debug print statement found",
-            "severity": "low",
-            "penalty": 10,
-        },
-        {
-            "id": "console-log",
-            "pattern": re.compile(r"\bconsole\.(log|warn|error)\s*\("),
-            "message": "Console logging statement found",
-            "severity": "low",
-            "penalty": 10,
-        },
-        {
-            "id": "hardcoded-secret",
-            "pattern": re.compile(
-                r"""(?i)(password|passwd|pwd|api[_-]?key|secret|token)\s*=\s*['"][^'"]{6,}['"]"""
-            ),
-            "message": "Possible hardcoded secret found",
-            "severity": "high",
-            "penalty": 25,
-        },
-        {
-            "id": "unsafe-eval",
-            "pattern": re.compile(r"\b(eval|exec)\s*\("),
-            "message": "Unsafe eval/exec usage found",
-            "severity": "high",
-            "penalty": 25,
-        },
-        {
-            "id": "broad-exception",
-            "pattern": re.compile(r"\bexcept\s*(Exception)?\s*:"),
-            "message": "Broad exception handler found",
-            "severity": "medium",
-            "penalty": 15,
-        },
-        {
-            "id": "bare-except-pass",
-            "pattern": re.compile(r"\bexcept\s*:\s*\n\s*pass\b"),
-            "message": "Empty bare except block found",
-            "severity": "high",
-            "penalty": 25,
-        },
-        {
-            "id": "todo-comment",
-            "pattern": re.compile(r"(?i)\b(TODO|FIXME|HACK)\b"),
-            "message": "Pending TODO/FIXME/HACK comment found",
-            "severity": "low",
-            "penalty": 5,
-        },
-        {
-            "id": "debug-mode",
-            "pattern": re.compile(r"\bdebug\s*=\s*True\b"),
-            "message": "Debug mode appears to be enabled",
-            "severity": "high",
-            "penalty": 20,
-        },
-        {
-            "id": "mutable-default",
-            "pattern": re.compile(r"def\s+\w+\s*\([^)]*=\s*(\[\]|\{\}|set\(\))"),
-            "message": "Mutable default argument found",
-            "severity": "medium",
-            "penalty": 15,
-        },
-        {
-            "id": "js-loose-equality",
-            "pattern": re.compile(r"(?<![=!])==(?!=)"),
-            "message": "Loose equality operator found; consider strict equality",
-            "severity": "low",
-            "penalty": 5,
-        },
-    ]
+    {
+        "id": "debug-print",
+        "pattern": re.compile(r"\bprint\s*\("),
+        "message": "Debug print statement found",
+        "severity": "low",
+        "penalty": 10,
+    },
+    {
+    "id": "wildcard-import",
+    "pattern": re.compile(r"from\s+\S+\s+import\s+\*"),
+    "message": "Wildcard import detected",
+    "severity": "medium",
+    "penalty": 10,
+    },
+    {
+    "id": "shell-true",
+    "pattern": re.compile(r"subprocess\.\w+\([^)]*shell\s*=\s*True"),
+    "message": "subprocess called with shell=True",
+    "severity": "high",
+    "penalty": 25,
+    },
+    {
+    "id": "assert",
+    "pattern": re.compile(r"\bassert\b"),
+    "message": "Assert statement found",
+    "severity": "low",
+    "penalty": 5,
+    },
+    {
+    "id": "open-without-with",
+    "pattern": re.compile(r"(?m)^\s*\w+\s*=\s*open\("),
+    "message": "File opened without using a context manager",
+    "severity": "medium",
+    "penalty": 10,
+    },
+    
+    {
+        "id": "hardcoded-secret",
+        "pattern": re.compile(
+            r"""(?i)(password|passwd|pwd|api[_-]?key|secret|token)\s*=\s*['"][^'"]{6,}['"]"""
+        ),
+        "message": "Possible hardcoded secret found",
+        "severity": "high",
+        "penalty": 25,
+    },
+    {
+        "id": "unsafe-eval",
+        "pattern": re.compile(r"\b(eval|exec)\s*\("),
+        "message": "Unsafe eval/exec usage found",
+        "severity": "high",
+        "penalty": 25,
+    },
+    {
+        "id": "broad-exception",
+        "pattern": re.compile(r"\bexcept\s*(Exception)?\s*:"),
+        "message": "Broad exception handler found",
+        "severity": "medium",
+        "penalty": 15,
+    },
+    {
+        "id": "bare-except-pass",
+        "pattern": re.compile(r"except\s*:\s*\n\s*pass"),
+        "message": "Empty bare except block found",
+        "severity": "high",
+        "penalty": 25,
+    },
+    {
+        "id": "todo-comment",
+        "pattern": re.compile(r"(?i)\b(TODO|FIXME|HACK)\b"),
+        "message": "Pending TODO/FIXME/HACK comment found",
+        "severity": "low",
+        "penalty": 5,
+    },
+    {
+        "id": "debug-mode",
+        "pattern": re.compile(r"\bdebug\s*=\s*True\b"),
+        "message": "Debug mode enabled",
+        "severity": "high",
+        "penalty": 20,
+    },
+    {
+        "id": "mutable-default",
+        "pattern": re.compile(r"def\s+\w+\s*\([^)]*=\s*(\[\]|\{\}|set\(\))"),
+        "message": "Mutable default argument found",
+        "severity": "medium",
+        "penalty": 15,
+    },
+]
 
     @staticmethod
     def analyze_code(code):
@@ -134,7 +149,7 @@ class AnalysisService:
                 continue
 
             indent = len(line) - len(line.lstrip())
-            function_match = re.match(r"(def|function)\s+([A-Za-z_][A-Za-z0-9_]*)", stripped)
+            function_match = re.match(r"def\s+([A-Za-z_][A-Za-z0-9_]*)",stripped)
 
             if function_match:
                 if function_start and index - function_start > max_lines:
@@ -148,7 +163,7 @@ class AnalysisService:
 
                 function_start = index
                 function_indent = indent
-                function_name = function_match.group(2)
+                function_name = function_match.group(1)
                 continue
 
             if function_start and indent <= function_indent and not stripped.startswith("#"):
