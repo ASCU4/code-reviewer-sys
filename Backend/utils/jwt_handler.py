@@ -13,6 +13,7 @@ def decode_token(token):
             current_app.config["SECRET_KEY"],
             algorithms=["HS256"]
         )
+        print(payload)
         return payload
     
     except jwt.ExpiredSignatureError:
@@ -27,6 +28,7 @@ def create_token(user):
         "email": user.email,
         "exp": datetime.now(timezone.utc) + timedelta(hours=24)
         }
+    print(payload)
     token=jwt.encode(
         payload,
         current_app.config["SECRET_KEY"],

@@ -14,6 +14,7 @@ def login_required(func):
     def wrapper(*args, **kwargs):
         print("Decorator executed")
         auth_header= request.headers.get("Authorization")
+        print(auth_header)
         
         if not auth_header:
             return jsonify({"error":"Authorization token missing"}), 401

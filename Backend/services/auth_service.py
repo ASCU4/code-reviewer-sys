@@ -81,13 +81,14 @@ class AuthService:
                 }
 
             #now payload creation
-            payload= {
-                "user_id": user.user_id,
-                "email": user.email
-            }
-            token= jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")
+            token=create_token(user)
             return{
-                "token": token
+                "token": token,
+                "user":{
+                    "user_id":user.user_id,
+                    "username":user.username,
+                    "email":user.email
+                }
             }
         finally:
             session.close()
@@ -119,6 +120,7 @@ class AuthService:
                     user.provider = "google"
                     user.provider_id = google_user["provider_id"]
             session.commit()
+            session.refresh(user)
             jwt= create_token(user)
             return {
             "message": "Google Login Successful",
@@ -142,14 +144,17 @@ class AuthService:
             email=GithubOAuthService.get_email(access_token)
             user=session.query(User).filter(User.email==email).first()
             if user is None:
-                username=github_user["login"]
-                email=email,
-                password_hash=None,
-                provider="github",
-                provider_id=str(github_user["id"])
+                user = User(
+                    username=github_user["login"],
+                    email=email,
+                    password_hash=None,
+                    provider="github",
+                    provider_id=str(github_user["id"]),
+                )
                 session.add(user)
                 session.commit()
                 session.refresh(user)
+
 
             token=create_token(user)
             return{
