@@ -1,4 +1,7 @@
 import re
+
+from services.gemini_service import GeminiService
+
 class AnalysisService:
     RULES = [
     {
@@ -129,11 +132,36 @@ class AnalysisService:
         # total_issues = sum(
         #     len(lines["issues"])
         # )
+        
+        # return {
+        #     "score": max(score, 0),
+        #     "issues": issues,
+        # }
 
+        #new changes for gemini
+        try:
+            gemini=GeminiService.review_code(code)
+        except Exception:
+            gemini = {
+                "summary": "AI review unavailable.",
+                "score": score,
+                "strengths": [],
+                "suggestions": [],
+                "security": []
+            }
+        
         return {
-            "score": max(score, 0),
-            "issues": issues,
-        }
+                "static_score": max(score, 0),
+                "ai_score": gemini["score"],
+                "score": max(round((score + gemini["score"]) / 2), 0),
+                "issues": issues,
+                "ai_review": gemini
+            }
+
+
+
+
+
 
     @staticmethod
     def _find_long_functions(lines, max_lines=50):
