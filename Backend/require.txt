@@ -8,3 +8,4 @@ Werkzeug
 GitPython
 google-auth
 requests
+psycopg2-binary
