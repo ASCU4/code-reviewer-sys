@@ -16,4 +16,5 @@ SessionLocal= sessionmaker(
         autoflush=False,
         autocommit=False
     )
+print(Config.DATABASE_URL)
 
